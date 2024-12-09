@@ -9,6 +9,10 @@ import threading
 from queue import Queue
 from retrying import retry
 from colorama import Fore, init
+from dotenv import load_dotenv  # اضافه کردن بارگذاری dotenv
+
+# بارگذاری متغیرهای محیطی از فایل .env
+load_dotenv()
 
 # ابتدا رنگ‌ها و تنظیمات colorama را راه‌اندازی می‌کنیم
 init(autoreset=True)
@@ -41,14 +45,14 @@ total_balance_eth = Decimal(0)
 # ایجاد یک نمونه از کلاس Mnemonic برای زبان انگلیسی
 mnemo = Mnemonic("english")
 
-# API Keys به صورت مستقیم داخل کد وارد شده است
+# بارگذاری API Keys از فایل .env
 etherscan_api_keys = [
-    "I9VUMFHE486HWAQ7XP5UCTNEHZWSH254KS",  # جایگزین با کلید واقعی
-    "ID2SDFMC7S8478IMCXNNHHMBVK3SXD9921",  # جایگزین با کلید واقعی
-    "7RGNWTKRABJ6JFE11C6SMYV9BYCCCQ6KJ8",  # جایگزین با کلید واقعی
-    "9W238C489WXYX4752J2875KM8GHKRZD2AR",  # جایگزین با کلید واقعی
-    "KGBNQTK4FSN5DWJWBQMIHMNEP6ZEP8ET7Y",  # جایگزین با کلید واقعی
-    "I5TIUVG4VBAA4HE3PXUTQVHEUPV3EPVG36"   # جایگزین با کلید واقعی
+    os.getenv('ETHERSCAN_API_KEY_1'),
+    os.getenv('ETHERSCAN_API_KEY_2'),
+    os.getenv('ETHERSCAN_API_KEY_3'),
+    os.getenv('ETHERSCAN_API_KEY_4'),
+    os.getenv('ETHERSCAN_API_KEY_5'),
+    os.getenv('ETHERSCAN_API_KEY_6')
 ]
 
 # اگر هیچ API Key موجود نبود، ارور بده
