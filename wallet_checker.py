@@ -8,7 +8,27 @@ from time import sleep
 import threading
 from queue import Queue
 from dotenv import load_dotenv
-from retrying import retry  # برای retry کردن درخواست‌ها
+from retrying import retry
+from colorama import Fore, init
+
+# ابتدا رنگ‌ها و تنظیمات colorama را راه‌اندازی می‌کنیم
+init(autoreset=True)
+
+# بنر با رنگ صورتی
+banner = '''
+███╗   ███╗███████╗███╗   ██╗████████╗ █████╗ ██╗  ██╗   ██╗
+████╗ ████║██╔════╝████╗  ██║╚══██╔══╝██╔══██╗██║  ╚██╗ ██╔╝
+██╔████╔██║█████╗  ██╔██╗ ██║   ██║   ███████║██║   ╚████╔╝ 
+██║╚██╔╝██║██╔══╝  ██║╚██╗██║   ██║   ██╔══██║██║    ╚██╔╝  
+██║ ╚═╝ ██║███████╗██║ ╚████║   ██║   ██║  ██║███████╗██║   
+╚═╝     ╚═╝╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝   
+                                                               
+'''
+
+# تابعی برای نمایش بنر در بالای صفحه
+def display_banner():
+    os.system('cls' if os.name == 'nt' else 'clear')  # برای ویندوز و لینوکس/مک
+    print(Fore.MAGENTA + banner)  # نمایش بنر با رنگ صورتی
 
 # بارگذاری متغیرهای محیطی از فایل .env
 load_dotenv()
@@ -37,6 +57,10 @@ etherscan_api_keys = [
     os.getenv("ETHERSCAN_API_KEY_6")
 ]
 
+# اگر هیچ API Key موجود نبود، ارور بده
+if not any(etherscan_api_keys):
+    raise ValueError("هیچ API Key برای Etherscan در فایل .env یافت نشد!")
+
 # فعال‌سازی ویژگی‌های HD Wallet در eth_account
 Account.enable_unaudited_hdwallet_features()
 
@@ -47,17 +71,21 @@ def check_balance_eth(address, api_key):
     for i in range(retries):
         try:
             response = requests.get(url, timeout=10)
-            response.raise_for_status()
+            response.raise_for_status()  # بررسی وضعیت پاسخ
             data = response.json()
             if data.get('status') == '1':
                 balance = Decimal(data['result']) / 10**18  # تبدیل از Wei به Ether
                 return balance
-            return Decimal(0)
+            else:
+                raise ValueError(f"خطا در دریافت موجودی برای {address}: {data.get('message', 'نامشخص')}")
         except requests.exceptions.RequestException as e:
             if i == retries - 1:
                 print(f"خطا در بررسی موجودی ETH برای {address}: {e}")
                 return Decimal(0)
             sleep(2 ** i)  # Exponential Backoff
+        except ValueError as e:
+            print(f"ارور در پردازش اطلاعات موجودی برای {address}: {e}")
+            return Decimal(0)
 
 # ذخیره وضعیت در فایل JSON
 def save_progress():
@@ -130,12 +158,26 @@ def process_wallet(api_key, queue):
     # ذخیره وضعیت پیشرفت در هر مرحله
     save_progress()
 
+# تابعی برای نمایش وضعیت به روز
+def display_status():
+    while True:
+        display_banner()
+        print(f"مجموع کیف پول‌های بررسی شده: {wallets_checked}")
+        print(f"مجموع کیف پول‌های پر: {full_wallets}")
+        print(f"مجموع کیف پول‌های خالی: {empty_wallets}")
+        print(f"مجموع موجودی اتریوم: {total_balance_eth:.4f} ETH")
+        sleep(2)  # مدت زمان برای رفرش کردن صفحه و بنر
+
 # کد اصلی
 def main():
     # بارگذاری پیشرفت
     load_progress()
 
     print("شروع جستجو...")
+
+    # ایجاد و شروع حلقه برای نمایش وضعیت به روز
+    status_thread = threading.Thread(target=display_status, daemon=True)
+    status_thread.start()
 
     queue = Queue()
 
