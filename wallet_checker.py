@@ -7,7 +7,6 @@ import requests
 from time import sleep
 import threading
 from queue import Queue
-from dotenv import load_dotenv
 from retrying import retry
 from colorama import Fore, init
 
@@ -30,9 +29,6 @@ def display_banner():
     os.system('cls' if os.name == 'nt' else 'clear')  # برای ویندوز و لینوکس/مک
     print(Fore.MAGENTA + banner)  # نمایش بنر با رنگ صورتی
 
-# بارگذاری متغیرهای محیطی از فایل .env
-load_dotenv()
-
 # فایل‌های ذخیره وضعیت
 progress_file = "progress.json"
 full_wallets_file = "full_wallets.json"
@@ -47,19 +43,19 @@ total_balance_eth = Decimal(0)
 # ایجاد یک نمونه از کلاس Mnemonic برای زبان انگلیسی
 mnemo = Mnemonic("english")
 
-# لیست API Keys از .env
+# API Keys به صورت مستقیم داخل کد وارد شده است
 etherscan_api_keys = [
-    os.getenv("ETHERSCAN_API_KEY_1"),
-    os.getenv("ETHERSCAN_API_KEY_2"),
-    os.getenv("ETHERSCAN_API_KEY_3"),
-    os.getenv("ETHERSCAN_API_KEY_4"),
-    os.getenv("ETHERSCAN_API_KEY_5"),
-    os.getenv("ETHERSCAN_API_KEY_6")
+    "I9VUMFHE486HWAQ7XP5UCTNEHZWSH254KS",  # جایگزین با کلید واقعی
+    "ID2SDFMC7S8478IMCXNNHHMBVK3SXD9921",  # جایگزین با کلید واقعی
+    "7RGNWTKRABJ6JFE11C6SMYV9BYCCCQ6KJ8",  # جایگزین با کلید واقعی
+    "9W238C489WXYX4752J2875KM8GHKRZD2AR",  # جایگزین با کلید واقعی
+    "KGBNQTK4FSN5DWJWBQMIHMNEP6ZEP8ET7Y",  # جایگزین با کلید واقعی
+    "I5TIUVG4VBAA4HE3PXUTQVHEUPV3EPVG36"   # جایگزین با کلید واقعی
 ]
 
 # اگر هیچ API Key موجود نبود، ارور بده
 if not any(etherscan_api_keys):
-    raise ValueError("هیچ API Key برای Etherscan در فایل .env یافت نشد!")
+    raise ValueError("هیچ API Key برای Etherscan در کد یافت نشد!")
 
 # فعال‌سازی ویژگی‌های HD Wallet در eth_account
 Account.enable_unaudited_hdwallet_features()
@@ -146,14 +142,12 @@ def process_wallet(api_key, queue):
     if balance_eth > 0:
         full_wallets += 1
         total_balance_eth += balance_eth
-        print(f"[+] کیف پول دارای موجودی پیدا شد: {mnemonic} ({address})")
-        # ذخیره کیف پول پر
         save_wallet_data(wallet_data, is_full_wallet=True)
+        print(f"[+] کیف پول دارای موجودی پیدا شد: {mnemonic} ({address})")
     else:
         empty_wallets += 1
-        print(f"[-] کیف پول خالی پیدا شد: {mnemonic} ({address})")
-        # ذخیره کیف پول خالی
         save_wallet_data(wallet_data, is_full_wallet=False)
+        print(f"[-] کیف پول خالی پیدا شد: {mnemonic} ({address})")
 
     # ذخیره وضعیت پیشرفت در هر مرحله
     save_progress()
@@ -161,6 +155,7 @@ def process_wallet(api_key, queue):
 # تابعی برای نمایش وضعیت به روز
 def display_status():
     while True:
+        # نمایش بنر و وضعیت به روز
         display_banner()
         print(f"مجموع کیف پول‌های بررسی شده: {wallets_checked}")
         print(f"مجموع کیف پول‌های پر: {full_wallets}")
@@ -172,8 +167,6 @@ def display_status():
 def main():
     # بارگذاری پیشرفت
     load_progress()
-
-    print("شروع جستجو...")
 
     # ایجاد و شروع حلقه برای نمایش وضعیت به روز
     status_thread = threading.Thread(target=display_status, daemon=True)
