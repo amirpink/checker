@@ -141,7 +141,8 @@ def process_wallet(api_key, queue):
         "balances": {"ETH": str(balance_eth)}
     }
 
-    if balance_eth > 0:
+    # تغییر شرط برای ذخیره حتی موجودی‌های خیلی کم
+    if balance_eth >= Decimal("0.00000000001"):  # ذخیره کیف پول‌ها با موجودی‌های حتی بسیار کم
         full_wallets += 1
         total_balance_eth += balance_eth
         save_wallet_data(wallet_data, is_full_wallet=True)
